@@ -3,8 +3,8 @@ require_relative 'functions'
 
 # autentizovat se
 Octokit.configure do |c|
-  c.login = 'login'
-  c.password = 'password'
+  c.login = 'USERNAME'
+  c.password = 'PASSWORD'
 end
 
 
@@ -49,8 +49,8 @@ db = Tire::Index.new('github')
 
 
 # store users to database
-#Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 15_000)
+Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 10_000)
 
 
 # store repositories and commits
-Octokit.all_repos_to_db(database = db, last_repo = last_repo, upper_limit = 15_000)
+#Octokit.all_repos_to_db(database = db, last_repo = last_repo, upper_limit = 15_000)

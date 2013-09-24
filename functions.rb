@@ -1,6 +1,7 @@
 require 'octokit'
 require 'tire'
 require 'curb'
+require 'geonames'
 
 # je nainstalovany elasticsearch?
 def es_running?
@@ -31,7 +32,10 @@ def create_database(db_name)
           :id           => {:type => 'integer'},
           :type_of_user => {:type => 'string', :analyzer => 'keyword'},
           :login        => {:type => 'string', :analyzer => 'keyword'},
-          :location     => {:type => 'string', :analyzer => 'snowball'},
+          :address      => {:type => 'string', :analyzer => 'snowball'},
+          :location     => {:type => 'geo_point', :lat_lon => 'true', :null_value => 'na'},
+          :country_code => {:type => 'string', :analyzer => 'keyword'},
+          :geo_name     => {:type => 'string', :analyzer => 'keyword'},
           :email        => {:type => 'string', :analyzer => 'pattern'},
           :bio          => {:type => 'string', :analyzer => 'snowball'},
           :blog         => {:type => 'string', :analyzer => 'pattern'},
@@ -122,11 +126,28 @@ module Sawyer
     def user_to_db
       attribs = self.attrs
       
+      loc = attribs[:location]
+      unless loc.nil? || loc==''
+        location = get_location(loc)
+        coords = [location[:lon], location[:lat]]
+        coords_formated = coords.join(',')
+        country_code = location[:country]
+        geo_name = location[:name]
+      else
+        coords_formated = nil
+        country_code = nil
+        geo_name = nil
+      end
+      
+      
       hash = {
         :id => attribs[:id],
         :type_of_user => attribs[:type],
         :login => attribs[:login],
-        :location => attribs[:location],
+        :address => attribs[:location],
+        :location => coords_formated,
+        :country_code => country_code,
+        :geo_name => geo_name,
         :email => attribs[:email],
         :bio => attribs[:bio],
         :blog => attribs[:blog],
@@ -224,6 +245,7 @@ module Octokit
           database.store(record)
           
           commits.each { |commit| database.store(commit) }
+          id_repo = repo.id
         # osetreni vyjimky - muze se stat, ze user neexistuje/nelze ho najit -> preskocit
         rescue
           next
@@ -253,4 +275,47 @@ def last_id(mapping)
     end
   end
   s.results.facets['max_id']['max']
+end
+
+# funkce pro ziskani souradnic mista
+def get_location(name)
+  #country Bias - prefered countries
+  #prefered_countries = ['US', 'GB', 'DE', 'CA', 'FR', 'SE', 'BR', 'IT'].join('+')
+  # criteria for search on Geonames
+  search_criteria = Geonames::ToponymSearchCriteria.new
+  search_criteria.q = name.downcase.gsub(',','')
+  #search_criteria.country_bias = prefered_countries
+  search_criteria.username = 'USERNAME'
+  search_criteria.password = 'PASSWORD'
+  results = Geonames::WebService.search(search_criteria)
+  # take first returned record, retrieve latitude and longitude
+  first_record = results.toponyms[0]
+  lat = first_record.latitude
+  lon = first_record.longitude
+  country = first_record.country_code
+  name = first_record.name
+  {:lat => lat, :lon => lon, :country => country, :name => name}
+end
+
+# take results of a Tire search and transform them to hash
+# expects: results of search in Tire of class Tire::SEARCH:SEARCH
+# designed to work with frequency table of words (number of users per country)
+module Tire
+  module Search
+    class Search
+      
+      def results_to_hash
+        hash = Hash.new()
+        arr = self.results.facets["codes"]["terms"]
+        arr.each do
+          |item|
+          key = item["term"]
+          value = item["count"]
+          hash[key] = value 
+        end
+        hash
+      end
+      
+    end
+  end
 end
