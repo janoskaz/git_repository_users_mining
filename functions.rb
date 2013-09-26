@@ -1,7 +1,10 @@
 require 'octokit'
 require 'tire'
 require 'curb'
-require 'geonames'
+require_relative 'geonames_api'
+
+
+#require 'geonames'
 
 # je nainstalovany elasticsearch?
 def es_running?
@@ -21,6 +24,11 @@ def database_exists?(db_name)
   !(code.nil?)
 end
 
+def delete_database(db_name)
+  index = Tire::Index.new(db_name)
+  index.delete
+end
+
 def create_database(db_name)
   index = Tire::Index.new(db_name)
   index.delete
@@ -36,6 +44,7 @@ def create_database(db_name)
           :location     => {:type => 'geo_point', :lat_lon => 'true', :null_value => 'na'},
           :country_code => {:type => 'string', :analyzer => 'keyword'},
           :geo_name     => {:type => 'string', :analyzer => 'keyword'},
+          :feature_code => {:type => 'string', :analyzer => 'keyword'},
           :email        => {:type => 'string', :analyzer => 'pattern'},
           :bio          => {:type => 'string', :analyzer => 'snowball'},
           :blog         => {:type => 'string', :analyzer => 'pattern'},
@@ -125,36 +134,27 @@ module Sawyer
     # transformace uzivatele do DatabaseRecord
     def user_to_db
       attribs = self.attrs
-      
+            
       loc = attribs[:location]
-      unless loc.nil? || loc==''
-        location = get_location(loc)
-        coords = [location[:lon], location[:lat]]
-        coords_formated = coords.join(',')
-        country_code = location[:country]
-        geo_name = location[:name]
-      else
-        coords_formated = nil
-        country_code = nil
-        geo_name = nil
-      end
       
-      
+      location = location_from_string(loc)
+            
       hash = {
-        :id => attribs[:id],
-        :type_of_user => attribs[:type],
-        :login => attribs[:login],
-        :address => attribs[:location],
-        :location => coords_formated,
-        :country_code => country_code,
-        :geo_name => geo_name,
-        :email => attribs[:email],
-        :bio => attribs[:bio],
-        :blog => attribs[:blog],
-        :public_repos => attribs[:public_repos],
-        :followers => self.rels[:followers].get_followers,
-        :following => self.rels[:following].get_following,
-        :created_at => attribs[:created_at]
+        :id              => attribs[:id],
+        :type_of_user    => attribs[:type],
+        :login           => attribs[:login],
+        :address         => attribs[:location],
+        :location        => location[:coords],
+        :country_code    => location[:country_code],
+        :geo_name        => location[:geo_name],
+        :feature_code    => location[:fcode],
+        :email           => attribs[:email],
+        :bio             => attribs[:bio],
+        :blog            => attribs[:blog],
+        :public_repos    => attribs[:public_repos],
+        :followers       => self.rels[:followers].get_followers,
+        :following       => self.rels[:following].get_following,
+        :created_at      => attribs[:created_at]
       }
       DatabaseRecord.new( type_of_record = 'user', h = hash )
     end
@@ -277,25 +277,67 @@ def last_id(mapping)
   s.results.facets['max_id']['max']
 end
 
-# funkce pro ziskani souradnic mista
-def get_location(name)
-  #country Bias - prefered countries
-  #prefered_countries = ['US', 'GB', 'DE', 'CA', 'FR', 'SE', 'BR', 'IT'].join('+')
-  # criteria for search on Geonames
-  search_criteria = Geonames::ToponymSearchCriteria.new
-  search_criteria.q = name.downcase.gsub(',','')
-  #search_criteria.country_bias = prefered_countries
-  search_criteria.username = 'USERNAME'
-  search_criteria.password = 'PASSWORD'
-  results = Geonames::WebService.search(search_criteria)
-  # take first returned record, retrieve latitude and longitude
-  first_record = results.toponyms[0]
-  lat = first_record.latitude
-  lon = first_record.longitude
-  country = first_record.country_code
-  name = first_record.name
-  {:lat => lat, :lon => lon, :country => country, :name => name}
+
+# method to get largest city in a hash
+def get_user_location(location, hash_of_params)
+  
+  # try to find exact match  
+  formatted_location = location.downcase.gsub(',','').gsub(' ','+')
+  hash_of_params[:name_equals] = formatted_location
+  
+  request = GeonamesAPI::GeonamesRequest.new(hash_of_params)
+  doc = GeonamesAPI::GeonamesDocument.new('api.geonames.org',request.make_request)
+  
+  # if there is no exact match, find all partial matches
+  # example> exact match is found for 'san francisco', but not for 'san francisco, ca'
+  if doc.body["totalResultsCount"] == 0
+    hash_of_params.delete(:name_equals)
+    hash_of_params[:q] = formatted_location
+    
+    request = GeonamesAPI::GeonamesRequest.new(hash_of_params)
+    doc = GeonamesAPI::GeonamesDocument.new('api.geonames.org',request.make_request)
+  end
+  
+  # if the place has not been found, return nil
+  if doc.body["totalResultsCount"] == 0
+    return nil
+  end
+    
+  doc.get_largest_city
+    
 end
+
+# method to get coordinates and country name of a given place
+def location_from_string(string)
+  
+  unless string.nil? || string==''
+    params = {:max_rows => 3, :username => 'janoskaz', :password => 'draksmak12', :feature_class => 'P'}
+    location = get_user_location(string, params)
+    
+    unless location.nil?
+      coords = [location["lng"], location["lat"]]
+      coords_formated = coords.join(',')
+      country_code = location["countryCode"]
+      geo_name = location["name"]
+      fcode = location["fcode"]
+    else
+      coords_formated = nil
+      country_code = nil
+      geo_name = nil
+      fcode = nil
+    end        
+    
+  else
+    coords_formated = nil
+    country_code = nil
+    geo_name = nil
+    fcode = nil
+  end
+  
+  {:coords => coords_formated, :country_code => country_code, :geo_name => geo_name, :fcode => fcode}
+  
+end
+
 
 # take results of a Tire search and transform them to hash
 # expects: results of search in Tire of class Tire::SEARCH:SEARCH
@@ -304,9 +346,9 @@ module Tire
   module Search
     class Search
       
-      def results_to_hash
+      def results_to_hash(name)
         hash = Hash.new()
-        arr = self.results.facets["codes"]["terms"]
+        arr = self.results.facets[name]["terms"]
         arr.each do
           |item|
           key = item["term"]

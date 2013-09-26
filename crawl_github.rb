@@ -3,10 +3,12 @@ require_relative 'functions'
 
 # autentizovat se
 Octokit.configure do |c|
-  c.login = 'USERNAME'
-  c.password = 'PASSWORD'
+  c.login = 'janoskaz'
+  c.password = 'draksmak12'
 end
 
+# delete database
+#delete_database('github')
 
 # if ElasticSearch is not running, will raise an exception and exit program
 es_running?
@@ -50,7 +52,6 @@ db = Tire::Index.new('github')
 
 # store users to database
 Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 10_000)
-
 
 # store repositories and commits
 #Octokit.all_repos_to_db(database = db, last_repo = last_repo, upper_limit = 15_000)
