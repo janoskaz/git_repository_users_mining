@@ -1,6 +1,5 @@
 require_relative 'github_crawler'
 
-
 # autentizovat se
 Octokit.configure do |c|
   c.login = 'username'
