@@ -1,4 +1,4 @@
-require_relative 'functions'
+require_relative 'github_crawler'
 require_relative 'google_api'
 require_relative 'word_cloud'
 
