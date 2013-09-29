@@ -1,4 +1,4 @@
-require_relative 'functions'
+require_relative 'github_crawler'
 
 
 # autentizovat se
@@ -51,7 +51,7 @@ db = Tire::Index.new('github')
 
 
 # store users to database
-Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 1_000)
+Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 2_000)
 
 # store repositories and commits
-Octokit.all_repos_to_db(database = db, last_repo = last_repo, upper_limit = 100_000)
+Octokit.all_repos_to_db(database = db, last_repo = last_repo, upper_limit = 250_000)
