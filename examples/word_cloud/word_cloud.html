@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Word Cloud - Github user's bio</title>
+    <link rel="stylesheet" type="text/css" href="jqcloud.css" />
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+    <script type="text/javascript" src="jqcloud-1.0.4.js"></script>
+    <script type="text/javascript" src="word_cloud_user_bio.js"></script>
+    <script type="text/javascript" src="word_cloud_commit_msg.js"></script>
+    
+  </head>
+  <body>
+  	<div>
+  	  <h1>Word clouds</h1>	
+    </div>
+  	<div>
+  	  <p>Word cloud generated from user's bio description.</p>
+  	  <p>Number of user records in the database: <span id="nr_users"></span>.</p>
+      <div id="word_cloud1" style="width: 550px; height: 350px;"></div>
+    </div>
+    <div>
+      <p>Word cloud generated from commit messages.</p>
+      <p>Number of commits in the database: <span id="nr_commits"></span>.</p>
+      <div id="word_cloud2" style="width: 550px; height: 350px;"></div>
+    </div>
+  </body>
+</html>
