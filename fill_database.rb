@@ -1,4 +1,4 @@
-require_relative 'functions'
+require_relative 'github-crawler'
 
 
 # autentizovat se
