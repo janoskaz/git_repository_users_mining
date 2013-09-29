@@ -3,6 +3,7 @@ require 'json'
 
 module GeonamesAPI
   
+  # request - string, which is send via http protocol to retrieve data
   class GeonamesRequest
     
     attr_accessor :formatted, :username, :password, :q, :feature_code, :feature_class,
@@ -36,6 +37,8 @@ module GeonamesAPI
         
   end
   
+  # document, which stores response to request
+  # response is parsed from json to hash
   class GeonamesDocument
     
     attr_reader :body
