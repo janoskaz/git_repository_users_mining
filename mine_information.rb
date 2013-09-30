@@ -1,6 +1,7 @@
 require_relative 'github_crawler'
 require_relative 'google_api'
 require_relative 'word_cloud'
+require_relative 'high_chart'
 
 
 # get number of users per country
@@ -48,8 +49,6 @@ google_maps_data.write_js('examples/google_map_charts/map_chart_cities.js', 'map
 
 
 
-
-
 ### get frequency of words in bio of users
 s = Tire.search 'github' do
   query { term :_type, 'user'}
@@ -87,3 +86,28 @@ word_cloud_data = WordCloud::WordArray.new(hash_of_results)
 # write a js file
 word_cloud_data.write_js('examples/word_cloud/word_cloud_commit_msg.js', 
                          'word_cloud_msg', 'word_cloud2', total_records, 'nr_commits')
+
+
+
+### numbers of created user acount per day
+s = Tire.search 'github' do
+  query {term :_type, 'user'}  
+  facet('date'){date :created_at, {:interval => 'day'}}  
+end 
+
+# transform results into hash with DateTime as keys
+hash_of_results = s.results_to_datetime('date')
+
+#transform data to TimeSeriesData class
+time_series_data = HighChart::TimeSeriesData.new(hash_of_results)
+
+#write a js file
+time_series_data.write_js('examples/timeseries/timeseries_chart_simple.js', 'container1')
+
+time_series_data.insert_days!
+
+time_series_data.write_js('examples/timeseries/timeseries_chart_inserted.js', 'container2')
+
+time_series_data.cummulative_count!
+
+time_series_data.write_js('examples/timeseries/timeseries_chart_cummulative.js', 'container3')
