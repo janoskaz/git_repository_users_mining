@@ -2,6 +2,7 @@ require_relative 'github_crawler'
 require_relative 'google_api'
 require_relative 'word_cloud'
 require_relative 'high_chart'
+require_relative 'apriori'
 
 
 # get number of users per country
@@ -111,3 +112,24 @@ time_series_data.write_js('examples/timeseries/timeseries_chart_inserted.js', 'c
 time_series_data.cummulative_count!
 
 time_series_data.write_js('examples/timeseries/timeseries_chart_cummulative.js', 'container3')
+
+
+
+# code to generate pair of users, who collaborate with each other
+# uses program apriori
+# http://www.borgelt.net/doc/apriori/apriori.html
+colab = collaborators_as_transactions('github', 'repo')
+
+trans = Apriori::Transactions.new(colab)
+
+input_file_path = '/tmp/input'
+output_file_path = '/tmp/output'
+
+trans.write_file(input_file_path, limit=2)
+
+opt = Apriori::Options.new({:target_type => 'm', :min_size =>2, :max_size => 2, :min_supp => -15, :min_conf => 100, :add_eval => "l", :output_format => " %e"})
+item_set = Apriori::call_apriori(input_file_path, output_file_path, opt)
+puts "DONE" if item_set
+File.delete(input_file_path, output_file_path)
+
+puts item_set.frequency_of_items
