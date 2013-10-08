@@ -19,7 +19,11 @@ fill_database.rb : crawl github and store information in the database
 mine_information.rb : perform simple analysis and generate some charts
 1) one file with maps (using google map charts) is generated. two maps are included: map of states and map of cities with numbers of github users
 2) one file with word clouds is generates. one word cloud shows most frequent words in user bio description, second word cloud shows most frequent words in commits
-
+create_gexf_file.rb : find users, who frequently collaborate and vizualize them using sigma_js
+1) uses apriori program to extract pairs of users
+2) uses sigma_js to vizualize them
+3) lib/gexf contains scripts to generate gexf file (graph with nodes and edges is created, xml file is produced)
+4) examples/sigma_js contains files neccessary to vizualize the graph 
 
 Pitfalls:
 requires to have acount on both github and geonames
@@ -29,5 +33,10 @@ github allows only 5000 hits per user per hour
 Loading maps from Google map charts (map of cities) is very slow
 No updating mechanism so far
 
+TODO:
+sigma_js graph - width of edges proportional to "strength" of relation, clusters of users in different colors
+google map of cities: would be faster, if coordinates are available?
+custom analyzer for messages in commits and user biography?
+better organize the files
 
 used gems: octokit, tire, curb, net/http, json
