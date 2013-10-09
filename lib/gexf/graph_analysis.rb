@@ -62,5 +62,5 @@ class Array
   def add_unique!(arr)
     arr.each { |item| self.push(item) unless self.include?(item) }
   end
-  self
+
 end
