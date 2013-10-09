@@ -14,7 +14,7 @@ class GEXF::Node
         self.public_send("#{attr}=", value)
       end if params
       
-    end
+    end 
     
     # write piece of xml
     def to_xml
@@ -34,7 +34,7 @@ class GEXF::Node
       end
       
       unless self.viz_color.nil?
-        text << "\t<viz:color b=\"#{self.viz_color[:b]}\" g=\"#{self.viz_color[:g]} r=\"#{self.viz_color[:r]}\"\"/>\n"
+        text << "\t<viz:color b=\"#{self.viz_color[:b]}\" g=\"#{self.viz_color[:g]}\" r=\"#{self.viz_color[:r]}\"/>\n"
       end
       
       unless self.viz_position.nil?

@@ -34,7 +34,7 @@ Loading maps from Google map charts (map of cities) is very slow
 No updating mechanism so far
 
 TODO:
-sigma_js graph - width of edges proportional to "strength" of relation, clusters of users in different colors
+sigma_js graph - width of edges proportional to "strength" of relation
 google map of cities: would be faster, if coordinates are available?
 custom analyzer for messages in commits and user biography?
 better organize the files

@@ -44,9 +44,11 @@ item_set.each do |itemset|
   id_from = g.nodes.select {|h| h.label==from}[0].id
   id_to = g.nodes.select {|h| h.label==to}[0].id
   
-  edge = GEXF::Edge.new({:id=>counter, :source=>id_from, :target=>id_to, :attributes=>{:size=>size}})
+  edge = GEXF::Edge.new({:id=>counter, :source=>id_from, :target=>id_to, :attributes=>{:weight=>size}})
   g.add_edge(edge)
   counter += 1 
 end
+
+g.color_nodes
 
 g.write('examples/sigma_js/collaborators.gexf')

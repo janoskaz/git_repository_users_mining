@@ -41,8 +41,24 @@ class GEXF::Graph
       f << self.to_xml
     ensure
       f.close
-    end
+    end    
     
+  end
+  
+  # add colors to nodes
+  # finds closed subgraphs in graph, every graphs will be colored with different color
+  def color_nodes
+    
+    clusters = self.find_subgraphs
+    
+    clusters.each do |cl|
+      col = [rand(256),rand(256),rand(256)]
+      
+      self.nodes.map! do |n|
+        n.viz_color = {:b => col[0], :g => col[1], :r => col[2]}  if cl.include?(n.id)
+        n
+      end
+    end
     
   end
   
