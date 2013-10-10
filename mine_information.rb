@@ -1,8 +1,7 @@
 require_relative 'github_crawler'
 require_relative 'google_api'
-require_relative 'word_cloud'
+require_relative 'lib/word_cloud/word_cloud'
 require_relative 'high_chart'
-require_relative 'apriori'
 
 
 # get number of users per country

@@ -1,7 +1,10 @@
 require 'octokit'
 require 'tire'
 require 'curb'
-require_relative 'geonames_api'
+require_relative 'lib/geonames_api/geonames_api'
+
+GEONAMES_LOGIN = 'login'
+GEONAMES_PASSWORD = 'password'
 
 
 # is ElasticSearch installed?
@@ -50,9 +53,9 @@ def create_database(db_name)
           :bio          => {:type => 'string', :analyzer => 'stop'},
           :blog         => {:type => 'string', :analyzer => 'pattern'},
           :public_repos => {:type => 'integer'},
-          :followers    => {:type => 'string', :analyzer => 'keyword'},
-          :following    => {:type => 'string', :analyzer => 'keyword'},
-          :created_at    => {:type => 'date'}
+          :followers    => {:type => 'string', :analyzer => 'whitespace'},
+          :following    => {:type => 'string', :analyzer => 'whitespace'},
+          :created_at   => {:type => 'date'}
         }
       },
       
@@ -63,7 +66,7 @@ def create_database(db_name)
           :repo_name     => {:type => 'string', :analyzer => 'keyword'},
           :repo_fullname => {:type => 'string', :analyzer => 'keyword'},
           :owner         => {:type => 'string', :analyzer => 'keyword'},
-          :collaborators => {:type => 'string', :analyzer => 'keyword'},
+          :collaborators => {:type => 'string', :analyzer => 'whitespace'},
           :description   => {:type => 'string', :analyzer => 'stop'},
           :created_at    => {:type => 'date'},
           :updated_at    => {:type => 'date'},
@@ -325,10 +328,11 @@ def get_user_location(location, hash_of_params)
 end
 
 # method to get coordinates and country name of a given place
+# LOGIN and PASSWORD must be set at teh beggining as global variables
 def location_from_string(string)
   
   unless string.nil? || string==''
-    params = {:max_rows => 3, :username => 'username', :password => 'password', :feature_class => 'P'}
+    params = {:max_rows => 3, :username => GEONAMES_LOGIN, :password => GEONAMES_PASSWORD, :feature_class => 'P'}
     location = get_user_location(string, params)
     
     unless location.nil?
@@ -363,6 +367,7 @@ module Tire
   module Search
     class Search
       
+      # transform results of facet count to hash
       def results_to_hash(name)
         hash = Hash.new()
         arr = self.results.facets[name]["terms"]
@@ -371,6 +376,20 @@ module Tire
           key = item["term"]
           value = item["count"]
           hash[key] = value 
+        end
+        hash
+      end
+      
+      # transform results of facet date to hash
+      def results_to_datetime(name)
+        hash = Hash.new()
+        arr = self.results.facets[name]["entries"]
+        arr.each do
+          |item|
+          key = (item['time']/1000).to_s
+          key = DateTime.strptime(key,'%s')
+          value = item['count']
+          hash[key] = value
         end
         hash
       end

@@ -1,9 +1,12 @@
 require_relative 'github_crawler'
 
+GITHUB_LOGIN = 'login'
+GITHUB_PASSWORD = 'password'
+
 # autentizovat se
 Octokit.configure do |c|
-  c.login = 'username'
-  c.password = 'password'
+  c.login = GITHUB_LOGIN
+  c.password = GITHUB_PASSWORD
 end
 
 # delete database
@@ -48,9 +51,8 @@ end
 # get pointer to database
 db = Tire::Index.new('github')
 
-
 # store users to database
-Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 2_000)
+Octokit.all_users_to_db(database = db, last_user = last_user, upper_limit = 9_000)
 
 # store repositories and commits
 Octokit.all_repos_to_db(database = db, last_repo = last_repo, upper_limit = 250_000)

@@ -1,4 +1,4 @@
-puts "\#\#\# this module uses program apriori by Christian Borgelt\#\#\#"
+puts "\#\#\# this module uses program apriori by Christian Borgelt \#\#\#"
 puts "More info on http://www.borgelt.net/doc/apriori/apriori.html"
 
 def collaborators_as_transactions(db, mapping)
@@ -116,7 +116,7 @@ module Apriori
     
   end
   
-  def call_apriori(input_file, output_file, options)
+  def call_apriori(input_file, output_file, options, keep_files=false)
     
     request = "apriori " << input_file << ' ' << output_file << options.to_s
     system(request)
@@ -128,6 +128,9 @@ module Apriori
         items = parts[0].split(' ')
         measures = parts[1].split(' ')
         item_sets << Apriori::ItemSet.new(itemset = items, measures = measures)
+      end
+      unless keep_files
+        File.delete(input_file, output_file)
       end
     rescue
       puts "Computation failed"

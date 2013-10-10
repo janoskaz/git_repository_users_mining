@@ -1,5 +1,5 @@
 require_relative 'lib/gexf/gexf'
-require_relative 'apriori'
+require_relative 'lib/apriori/apriori'
 
 require 'tire'
 

@@ -3,7 +3,7 @@ class GEXF::Graph
   # find all closed subgraphs in a graph
   def find_subgraphs
     
-    clusters = GEXF::Cluster.new()
+    clusters = []
     
     self.nodes.each do |n|
       
@@ -48,19 +48,17 @@ class GEXF::Graph
   
 end
 
-class GEXF::Cluster < Array
-  
-  def contains_node?(node)
-    self.any? { |arr| arr.include?(node.id)}
-  end
-  
-end
-
 class Array
   
   # appends items from arr, if they are already not present
   def add_unique!(arr)
     arr.each { |item| self.push(item) unless self.include?(item) }
+  end
+
+  # does any of the arrays include node?
+  # expects array of arrays
+  def contains_node?(node)
+    self.any? { |arr| arr.include?(node.id)}
   end
 
 end
