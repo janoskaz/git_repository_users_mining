@@ -102,14 +102,28 @@ hash_of_results = s.results_to_datetime('date')
 time_series_data = HighChart::TimeSeriesData.new(hash_of_results)
 
 #write a js file
-time_series_data.write_js('examples/timeseries/timeseries_chart_simple.js', 'container1')
+time_series_data.write_js('examples/high_chart/timeseries_chart_simple.js', 'container1')
 
 time_series_data.insert_days!
 
-time_series_data.write_js('examples/timeseries/timeseries_chart_inserted.js', 'container2')
+time_series_data.write_js('examples/high_chart/timeseries_chart_inserted.js', 'container2')
 
 time_series_data.cummulative_count!
 
-time_series_data.write_js('examples/timeseries/timeseries_chart_cummulative.js', 'container3')
+time_series_data.write_js('examples/high_chart/timeseries_chart_cummulative.js', 'container3')
 
 
+### table of languages used in repos
+s = Tire.search 'github' do
+  query { term :_type, 'repo'}
+  facet('lng'){ terms :language, :size => 50}
+end
+
+# transform results into hash with DateTime as keys
+hash_of_results = s.results_to_hash('lng')
+
+#transform data to BarChart class
+lng_table = HighChart::BarChart.new(hash_of_results)
+
+# write js file with bar chart
+lng_table.write_js('examples/high_chart/lng_table.js', 'container')
