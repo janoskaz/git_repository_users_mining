@@ -1,6 +1,7 @@
 require 'octokit'
 require 'tire'
 require 'curb'
+require 'haversine'
 require_relative 'lib/geonames_api/geonames_api'
 
 GEONAMES_LOGIN = 'login'
@@ -368,6 +369,12 @@ module Tire
     class Search
       
       # transform results of facet count to hash
+      def results_to_array(name)
+        arr = self.results.facets[name]["terms"]
+        #arr
+      end
+      
+      # transform results of facet count to hash
       def results_to_hash(name)
         hash = Hash.new()
         arr = self.results.facets[name]["terms"]
@@ -375,7 +382,7 @@ module Tire
           |item|
           key = item["term"]
           value = item["count"]
-          hash[key] = value 
+          hash[key] = value
         end
         hash
       end
@@ -396,4 +403,41 @@ module Tire
       
     end
   end
+end
+
+
+### cluster cities, which are close
+def cluster(cities, distance)
+  new_cities = []
+  
+  names = cities.map { |h| h['term']}
+  
+  # for each city: get coun and location, remove from the list
+  names.each do |city_name|
+    selected =  cities.select {|a| a['term'] == city_name}[0]
+    next if selected.nil?
+    xy = [ selected['y'], selected['x'] ] 
+    cities.delete(selected)
+    
+    # for remaining city check, if close
+    near = cities.select do |city|
+      city_xy = [city['y'], city['x']]
+      d = Haversine.distance(xy, city_xy).to_km
+      d < distance
+    end
+    
+    begin
+      # sum users in close cities and delete close cities
+      sum_of_users = near.inject(0) { |sum, city| sum + city['count']}
+      near.each { |city| cities.delete(city)}
+      selected['count'] += sum_of_users
+      selected['term'] << ' Area'
+    end if near.size > 0
+    
+    new_cities.push(selected)
+    
+  end
+  
+  new_cities
+  
 end

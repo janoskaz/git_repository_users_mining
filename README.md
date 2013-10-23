@@ -11,6 +11,7 @@ Determination of location uses following procedure:
 - if not: is there exact match of city? (i.e. *San Francisco de Macorís*)
 - if not: find biggest city, which matches the location (i.e. for *San Francisco*, it is San Francisco, California)
 
+(HERE)[http://rpubs.com/janoskaz/text_mining_elasticsearch] is example of how data from elasticsearch can be loaded into R and some basic text mining and document clustering can be performed. 
 
 
 Description of files:
@@ -19,6 +20,7 @@ Description of files:
 - fill_database.rb : crawl github and store information in the database
 - mine_information.rb : perform simple analysis and generate some charts
     - one file with maps (using google map charts) is generated. two maps are included: map of states and map of cities with numbers of github users
+    cities are clustered, if closer than 100 km, such cluster is called Area (see example: New York Area vs. Austin).
     - one file with word clouds is generates. one word cloud shows most frequent words in user bio description, second word cloud shows most frequent words in commits
     - two html files in directory high_chart are generated - graph of number of registered users in time, and graph of languages used in repos
 - create_gexf_file.rb : find users, who frequently collaborate and vizualize them using sigma_js
@@ -33,16 +35,14 @@ Pitfalls:
 - searching for location for every user slows inserting the data significantly
 - Determination of user location is approximate, includes mistakes (i.e. SL,UT is supposedly Salt Lake, Utah, but geonames return no result for this query)
 - github allows only 5000 hits per user per hour
-- Loading maps from Google map charts (map of cities) is very slow
 - No updating mechanism so far
 
 TODO:
 -----
 - sigma_js graph - width of edges proportional to *strength* of relation
-- google map of cities: would be faster, if coordinates are available?
 - custom analyzer for messages in commits and user biography?
 - better organize the files
 - clustering of documents in a database - some form of text mining. Perhaps use R?
 - high chart graph generation should be reorganized. Currently there are only functions designed specificaly to generate one type of graph, without any possibility of inserting parameters
 
-used gems: octokit, tire, curb, net/http, json
+used gems: octokit, tire, curb, net/http, json, haversine

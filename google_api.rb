@@ -1,25 +1,28 @@
 module GoogleMapsAPI
   
-  class DataContainer
-    
-    attr_accessor :hash
-    
-    # accepts hash of values
-    def initialize(h)
-      unless h.class == Hash
-        fail 'accepts only Hash as a parameter'
-      end
-      @hash = h
-    end
-    
+  class DataContainer < Array
+
     # creates variable data, which is a DataTable
     # returns string with js code
     def js_draw_map
       js_code = "var data = google.visualization.arrayToDataTable([\n"
-      js_code << "\t['Country', 'Users'],\n"
-      self.hash.each do
-        |key, value|
-        js_code << "\t\t['#{key}', #{value}],\n"
+      #js_code << "\t['Country', 'Users'],\n"
+      
+      #names of columns
+      if self[0].size == 2
+        js_code << "\t['Country', 'Users'],\n"
+      else
+        js_code << "\t['X', 'Y', 'Users', 'Populated Area'],\n"
+      end
+      
+      # input data
+      self.each do
+        |h|
+        if h.size == 2
+          js_code << "\t\t[\'#{h['term']}\', #{h['count']}],\n"
+        elsif h.size == 4
+          js_code << "\t\t[#{h['y']}, #{h['x']}, #{h['count']}, \'#{h['term']}\'],\n"
+        end
       end
       js_code << "\t]);\n"
     end
