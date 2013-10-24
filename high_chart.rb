@@ -118,13 +118,18 @@ module HighChart
     end
     
     # created key-value pairs informat, which isunderstood by gigh charts
-    def make_series
+    def make_series(rand_colors = false)
       
       text = "series: [{ 
                 data : [\n"
       
       self.values.each do |value|
-        text << value.to_s << ', '
+        text << '{' 
+        text << 'y: 'if rand_colors
+        text << value.to_s
+        text << ", color: \'##{"%06x" % (rand * 0xffffff)}\'" if rand_colors
+        text << '}'  
+        text << ', '
       end
       
       text << "] }],"
@@ -174,7 +179,7 @@ module HighChart
                     text: 'Number of Repositories '
                 }
             },\n"
-       js_code << self.make_series
+       js_code << self.make_series(rand_colors=true)
        js_code << "});
     });"
       
